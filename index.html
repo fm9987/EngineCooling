@@ -70,7 +70,7 @@
             });
 
             drawRocket(coords);
-            label.textContent = path.basename(filePath);
+            label.textContent = filePath.basename(filePath);
             document.getElementById('Sim').style.display = "block";
             document.getElementById('type').style.display = "block";
         });
@@ -137,18 +137,28 @@
             }
 
             document.getElementById('Sim').addEventListener('click', async function () {
-                const inputFile = window.selectedFilePath;
                 const resultDiv = document.getElementById('simulationResult');
                 resultDiv.textContent = 'Running simulation...';
 
                 try {
-                    await window.api.runSimulation(inputFile);
-                    const { coords, values } = await window.api.readCSV(); // assume output is fixed
-                    resultDiv.textContent = `Worked at least`;
-                    // drawRocket(coords, values);
+                    const outputFile = await window.api.runSimulation();
+                    const content = await window.api.readCSV(outputFile); // assume output is fixed
+                    resultDiv.textContent = `It worked at least`;
+
+                    // Add code to draw the rocket
+                    const lines = content.trim().split('\n');
+                    const coords = lines.slice(1).map(line => {
+                        const [x, r] = line.split(',').map(Number);
+                        return { x, r };
+                    });
+                    const values = lines.slice(1).map(line => {
+                        const [a,b,c] = line.split(',').map(Number);
+                        return {c};
+                    })
+                    drawRocket(coords, values);
+                    resultDiv.textContent = `Did it not show the colors?`;
                 } catch (error) {
-                    resultDiv.textContent = 'Error running simulation.';
-                    console.error('Simulation error:', error);
+                    resultDiv.textContent =  error;
                 }
 
                 document.getElementById('Results').style.display = "block";

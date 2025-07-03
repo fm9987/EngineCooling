@@ -9,6 +9,7 @@ let dataWindow = null;
 let inputFilePath = null;
 
 
+
 ipcMain.on('set-input-file-path', (event, path) => {
   console.log('Received input file path:', path);
   inputFilePath = path;
@@ -67,13 +68,22 @@ ipcMain.handle('run-simulation', async () => {
 
         const py = spawn('python', ['app.py', inputFilePath]);
 
-        py.on('close', (code) => {
-            if (code === 0) resolve();
-            else reject(new Error('Simulation failed'));
+        let outputFilePath = '';
+
+        py.stdout.on('data', (data) => {
+            outputFilePath += data.toString();
         });
 
         py.stderr.on('data', (data) => {
             console.error('Python error:', data.toString());
+        });
+
+        py.on('close', (code) => {
+            if (code === 0) {
+                resolve(outputFilePath.trim()); // send the output file path back
+            } else {
+                reject(new Error('Simulation failed'));
+            }
         });
     });
 });
