@@ -1,17 +1,13 @@
-import random
+import sys
 import pandas as pd
-import csv
+import random
 import os
 
-# Write to CSV
-numbers = [random.randint(1, 100) for _ in range(100)]
+input_file = sys.argv[1]
+df = pd.read_csv(input_file)
+
+df["Temperature"] = [random.randint(1, 100) for _ in range(len(df))]
 output_file = "output.csv"
+df.to_csv(output_file, index=False)
 
-with open(output_file, mode='w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow(["Temperature"])
-    for num in numbers:
-        writer.writerow([num])
-
-# ✅ Output ONLY the file path, nothing else
-print(os.path.abspath(output_file))
+print(os.path.abspath(output_file))  # Optional if you're using stdout

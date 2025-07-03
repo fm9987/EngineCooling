@@ -1,7 +1,8 @@
-// preload.js
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld('api', {
-    runSimulation: () => ipcRenderer.invoke('run-simulation')
+contextBridge.exposeInMainWorld('api', {  
+    openFileDialog: () => ipcRenderer.invoke('dialog:openFile'),
+    setInputFilePath: (path) => ipcRenderer.send('set-input-file-path', path),
+    runSimulation: (filePath) => ipcRenderer.invoke('run-simulation', filePath),
+    readCSV: (filePath) => ipcRenderer.invoke('read-csv',filePath)
 });
-

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, dialog } = require('electron');
 const { exec } = require('child_process');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -6,19 +6,27 @@ const path = require('path');
 
 let mainWindow = null;
 let dataWindow = null;
+let inputFilePath = null;
+
+
+ipcMain.on('set-input-file-path', (event, path) => {
+  console.log('Received input file path:', path);
+  inputFilePath = path;
+});
 
 function createMainWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
   mainWindow = new BrowserWindow({
     title: 'Main',
-    width: width*0.9,
-    height: height*0.9,
+    width: width*0.95,
+    height: height,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // ✅ POINT TO preload.js
       nodeIntegration: false,
       contextIsolation: true
-    }
+    },
+    autoHideMenuBar: true // ✅ This hides the menu bar!
   });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
@@ -53,23 +61,42 @@ ipcMain.on('open-data-window', () => {
 });
 
 
-// Run the Python simulation when triggered
 ipcMain.handle('run-simulation', async () => {
     return new Promise((resolve, reject) => {
-        exec('python app.py', (error, stdout, stderr) => {
-            if (error) return reject(stderr || error.message);
+        if (!inputFilePath) return reject(new Error('No input file set'));
 
-            const csvPath = stdout.trim(); // assume this is the path to output.csv
-            fs.readFile(csvPath, 'utf8', (err, data) => {
-                if (err) return reject(err);
-                
-                // Parse CSV
-                const lines = data.trim().split('\n').slice(1); // skip header
-                const numbers = lines.map(line => parseInt(line));
-                resolve(numbers);
-            });
+        const py = spawn('python', ['app.py', inputFilePath]);
+
+        py.on('close', (code) => {
+            if (code === 0) resolve();
+            else reject(new Error('Simulation failed'));
+        });
+
+        py.stderr.on('data', (data) => {
+            console.error('Python error:', data.toString());
         });
     });
 });
 
+ipcMain.handle('read-csv', async (event, filePath) => {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    return content;
+  } catch (err) {
+    console.error('Error reading file:', err);
+    return null;
+  }
+});
 
+
+ipcMain.handle('dialog:openFile', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: [{ name: 'CSV Files', extensions: ['csv'] }],
+  });
+  if (result.canceled) {
+    return null;
+  } else {
+    return result.filePaths[0];
+  }
+});

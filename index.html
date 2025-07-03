@@ -11,8 +11,7 @@
         <div class="Data Button" onclick="openData()">Data</div>
         <!-- Engine outline selector -->
         <div class="Button" id="FileSelector">
-            <label for="fileInput" id="fileLabel">Engine shape:</label>
-            <input type="file" id="fileInput" accept=".csv" style="display: none;">
+            <label id="fileInput">Engine shape:</label>
         </div>
        
         <!-- Simulation type selector -->
@@ -53,37 +52,30 @@
         </div>
 
         <script>
-            document.getElementById('fileInput').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            const sim = document.getElementById('Sim');
-            const type = document.getElementById('type');
+        document.getElementById('fileInput').addEventListener('click', async function (e) {   
+            const label = document.getElementById('fileLabel');
+            
+            const filePath = await window.api.openFileDialog();
+            if (!filePath) return;
+            window.api.setInputFilePath(filePath);
+            
+            const content = await window.api.readCSV(filePath);
 
-            if (!file) return;
-              const label = document.getElementById('fileLabel');
 
-            if (file) {
-                const filenameWithoutExtension = file.name.replace(/\.csv$/i, '');
-                label.textContent = filenameWithoutExtension;
-                sim.style.display = "block";
-                type.style.display = "block";
-            } else {
-                label.textContent = 'Engine shape:';
-                sim.style.display = "none";
-            }
-
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                const lines = event.target.result.trim().split('\n');
-                const coords = lines.slice(1).map(line => {
+            // Parse CSV
+            const lines = content.trim().split('\n');
+            const coords = lines.slice(1).map(line => {
                 const [x, r] = line.split(',').map(Number);
                 return { x, r };
-                });
-
-                drawRocket(coords);
-            };
-            reader.readAsText(file);
             });
 
+            drawRocket(coords);
+            label.textContent = path.basename(filePath);
+            document.getElementById('Sim').style.display = "block";
+            document.getElementById('type').style.display = "block";
+        });
+
+            
             function drawRocket(points, values = []) {
                 const canvas = document.getElementById('rocketCanvas');
                 const ctx = canvas.getContext('2d');
@@ -144,15 +136,16 @@
                 }
             }
 
-
             document.getElementById('Sim').addEventListener('click', async function () {
+                const inputFile = window.selectedFilePath;
                 const resultDiv = document.getElementById('simulationResult');
                 resultDiv.textContent = 'Running simulation...';
 
                 try {
-                    const resultArray = await window.api.runSimulation(); // Now an array of numbers
-                    resultDiv.textContent = `Numbers: ${resultArray.join(', ')}`;
-                    // drawRocket(rocketCoords, resultArray); // 🔥 Draw with simulation-based color
+                    await window.api.runSimulation(inputFile);
+                    const { coords, values } = await window.api.readCSV(); // assume output is fixed
+                    resultDiv.textContent = `Worked at least`;
+                    // drawRocket(coords, values);
                 } catch (error) {
                     resultDiv.textContent = 'Error running simulation.';
                     console.error('Simulation error:', error);
