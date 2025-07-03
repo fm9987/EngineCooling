@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simulation data</title>
+    <link rel="stylesheet" href="main.css" />
+</head>
+
+<body>
+    <div id="Temperature">
+        T_0 = <input type="text" id="T" placeholder="3400" class="user-input" /> [K]
+    </div>
+    <div id="Pressure">
+        P_0 = <input type="text" id="P" placeholder="6.9" class="user-input" /> [MPa]
+    </div>
+
+
+    <div class="Save Button" onclick="save()">Save</div>
+    <script>
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(__dirname, 'IC.json');
+
+    // Load existing values into inputs on page load
+    window.onload = () => {
+        if (fs.existsSync(filePath)) {
+            try {
+                const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                if (data.T_0) {
+                    document.getElementById('T').placeholder = data.T_0;
+                }
+                if (data.P_0) {
+                    document.getElementById('P').placeholder = data.P_0;
+                }
+            } catch (err) {
+                console.error('Error loading JSON:', err);
+            }
+        }
+    };
+    
+    function save(){
+        const T = document.getElementById('T').value;
+        const P = document.getElementById('P').value;
+        const fs = require('fs');
+        const path = require('path');
+        const filePath = path.join(__dirname, 'IC.json');
+
+        let existingData = {};
+        if (fs.existsSync(filePath)) {
+        try {
+            const fileContent = fs.readFileSync(filePath, 'utf8');
+            existingData = JSON.parse(fileContent);
+        } catch (err) {
+            console.error('Error reading existing file:', err);
+            alert('Error reading existing data. It will be overwritten.');
+        }
+        }
+
+        // Only update keys if input is not empty
+        if (T !== '') {
+        existingData.T_0 = T;
+        }
+        if (P !== '') {
+        existingData.P_0 = P;
+        }
+
+        fs.writeFile(filePath, JSON.stringify(existingData, null, 2), (err) => {
+        if (err) {
+            alert('Error saving file: ' + err.message);
+            console.error(err);
+        } else {
+            // alert('Data saved successfully!');
+        }
+        });
+    }
+    </script>
+</body>
+</html>

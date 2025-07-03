@@ -1,0 +1,90 @@
+body{
+    background-color: black;
+    color: skyblue;
+    text-align: center;
+    font-family: "Audiowide", sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.Title {
+  position: fixed;
+  top: 20px;           /* distance from top */
+  left: 50%;           /* move to horizontal center */
+  transform: translateX(-50%); /* center align */
+  display: flex;       /* keep your flex styles */
+  /* other styles */
+  z-index: 1000;       /* on top */
+  display: inline-block;
+  padding: 5px 12px;
+  background-color: black;
+}
+
+.help {
+  position: fixed;
+  top: 5px;
+  left: 1%;
+  display: flex;
+}
+
+.Data {
+  position: fixed;
+  top: 5px;
+  right: 1%;
+  display: flex;
+}
+.Button {
+  display: inline-block;
+  padding: 5px 12px;
+  background-color: skyblue;
+  color: black;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.Button:hover {
+  background-color: white;
+  color: black;
+}
+
+.Button2 select{
+  /* display: inline-block; */
+  border-color: skyblue;
+  padding: 5px 12px;
+  background-color: skyblue;
+  color: black;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.Row{
+  display: flex;
+  justify-content: center; /* Center the button group */
+  gap: 5px;               /* Space BETWEEN the buttons */
+  margin-top: 1px;        /* Optional: to move it down */
+}
+
+input{
+  /* display: inline-block; */
+  width: 75px;
+  text-align: center;
+  padding: 5px 5px;
+  background-color: skyblue;
+  color: black;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 5px;
+}
+
+.Save{
+  position: fixed;
+  bottom: 1%;
+  display: flex;
+}

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Rocket Cooling</title>
+        <link rel="stylesheet" href="main.css" />
+    </head>
+
+    <body>
+        <div class="Title"><h1>Rocket Cooling simulation</h1></div>
+        <div class="help Button">?</div>
+        <div class="Data Button" onclick="openData()">Data</div>
+        <!-- Engine outline selector -->
+        <div class="Button" id="FileSelector">
+            <label for="fileInput" id="fileLabel">Engine shape:</label>
+            <input type="file" id="fileInput" accept=".csv" style="display: none;">
+        </div>
+       
+        <!-- Simulation type selector -->
+        <div class="Row" id="type" style="display: none;">
+        <!-- <div class="Row" id="type"> -->
+            <div class="Button" id="R">Regen cooling</div>
+            <div class="Button" id="F">Film cooling</div>
+        </div>
+
+        <!-- Regen parameters -->
+        <div class="Row" id="Reg" style="display: none">
+            <input type="text" id="N" placeholder="# Channels" class="user-input" />
+            <input type="text" id="w" placeholder="Width [mm]" class="user-input" />
+            <input type="text" id="h" placeholder="Height [mm]" class="user-input" />
+        </div>
+        <div id="Regen" class="Button" style="display: none;">Submit</div>
+       
+        <!-- Drawing of the rocket -->
+        <canvas id="rocketCanvas" width="600" height="400" style="border:1px solid black;"></canvas>
+
+        <!-- Run the simulation here -->
+        <!-- <div class="Button" id="Sim" style="display: none"> -->
+        <div class="Button" id="Sim">
+            Run the simulation
+        </div>
+
+        <!-- Status of the simulation -->
+        <div id="simulationResult" style="margin-top: 10px; font-weight: bold;"></div>
+
+        <!-- Choose the output to look at from the simulation -->
+        <div id="Results" class="Button2" style="display: none;">
+            <select>
+                <option value="T_W">Temperature Wall</option>
+                <option value="T_C">Temperature Coolant</option>
+                <option value="P_C">Pressure Coolant</option>
+                <option value="Sigma">Stress wall</option>
+            </select>
+        </div>
+
+        <script>
+            document.getElementById('fileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const sim = document.getElementById('Sim');
+            const type = document.getElementById('type');
+
+            if (!file) return;
+              const label = document.getElementById('fileLabel');
+
+            if (file) {
+                const filenameWithoutExtension = file.name.replace(/\.csv$/i, '');
+                label.textContent = filenameWithoutExtension;
+                sim.style.display = "block";
+                type.style.display = "block";
+            } else {
+                label.textContent = 'Engine shape:';
+                sim.style.display = "none";
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const lines = event.target.result.trim().split('\n');
+                const coords = lines.slice(1).map(line => {
+                const [x, r] = line.split(',').map(Number);
+                return { x, r };
+                });
+
+                drawRocket(coords);
+            };
+            reader.readAsText(file);
+            });
+
+            function drawRocket(points, values = []) {
+                const canvas = document.getElementById('rocketCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const maxX = Math.max(...points.map(p => p.x));
+                const maxR = Math.max(...points.map(p => p.r));
+                const scaleX = canvas.width / maxX;
+                const scaleY = canvas.height / (2 * maxR);
+
+                ctx.lineWidth = 3;
+
+                // Use a gradient color based on values (e.g., temperature, stress)
+                function getColor(v, min, max) {
+                    const t = (v - min) / (max - min);
+                    const r = Math.round(255 * t);
+                    const b = Math.round(255 * (1 - t));
+                    return `rgb(${r},0,${b})`;
+                }
+
+                const minVal = Math.min(...values);
+                const maxVal = Math.max(...values);
+
+                // Draw upper side
+                for (let i = 0; i < points.length - 1; i++) {
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    const x1 = p1.x * scaleX;
+                    const y1 = canvas.height / 2 - p1.r * scaleY;
+                    const x2 = p2.x * scaleX;
+                    const y2 = canvas.height / 2 - p2.r * scaleY;
+
+                    const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+                    ctx.strokeStyle = color;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+
+                // Draw lower side (mirrored)
+                for (let i = points.length - 1; i > 0; i--) {
+                    const p1 = points[i];
+                    const p2 = points[i - 1];
+                    const x1 = p1.x * scaleX;
+                    const y1 = canvas.height / 2 + p1.r * scaleY;
+                    const x2 = p2.x * scaleX;
+                    const y2 = canvas.height / 2 + p2.r * scaleY;
+
+                    const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+                    ctx.strokeStyle = color;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            }
+
+
+            document.getElementById('Sim').addEventListener('click', async function () {
+                const resultDiv = document.getElementById('simulationResult');
+                resultDiv.textContent = 'Running simulation...';
+
+                try {
+                    const resultArray = await window.api.runSimulation(); // Now an array of numbers
+                    resultDiv.textContent = `Numbers: ${resultArray.join(', ')}`;
+                    // drawRocket(rocketCoords, resultArray); // 🔥 Draw with simulation-based color
+                } catch (error) {
+                    resultDiv.textContent = 'Error running simulation.';
+                    console.error('Simulation error:', error);
+                }
+
+                document.getElementById('Results').style.display = "block";
+            });
+       
+            document.getElementById('R').addEventListener('click',function(){
+                const a = document.getElementById('Reg');
+                const b = document.getElementById('Regen');
+                a.style.display = "block";
+                b.style.display = "block";
+            });
+
+            document.getElementById('Regen').addEventListener('click',function(){
+                const N = document.getElementById('N').value;
+                const w = document.getElementById('w').value;
+                const h = document.getElementById('h').value;
+
+                console.log(`You gave: Channels=${N}, Width=${w}mm, Height=${h}mm`);
+            });
+
+            const { ipcRenderer } = require('electron');
+
+            function openData() {
+            ipcRenderer.send('open-data-window');
+            }
+       </script>
+    </body>
+</html>
