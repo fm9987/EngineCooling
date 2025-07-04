@@ -33,6 +33,9 @@ function createMainWindow() {
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 }
 
+//Try this to deactivate the flickers
+app.disableHardwareAcceleration();
+
 app.whenReady().then(createMainWindow);
 
 // ✅ When "Data" is clicked
