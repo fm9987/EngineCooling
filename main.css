@@ -19,7 +19,7 @@ body{
   transform: translateX(-50%); /* center align */
   display: flex;       /* keep your flex styles */
   /* other styles */
-  z-index: 1000;       /* on top */
+  /* z-index: 1000;       on top */
   display: inline-block;
   padding: 5px 12px;
   background-color: black;
@@ -38,15 +38,22 @@ body{
   right: 1%;
   display: flex;
 }
-.Button {
+
+.Button, .Button3 {
+  align-self: center; /* centers it horizontally */
+  width: fit-content;
   display: inline-block;
   padding: 5px 12px;
   background-color: skyblue;
   color: black;
   border-radius: 5px;
   cursor: pointer;
-  margin-bottom: 5px;
+  margin-top: 0.5vh;
   transition: background-color 0.2s ease;
+}
+
+.Button3{
+  cursor: default;
 }
 
 .Button:hover {
@@ -54,21 +61,29 @@ body{
   color: black;
 }
 
+.Button2 {
+  margin-top: 0.5vh;
+  font-family: "Audiowide", sans-serif;
+}
+
 .Button2 select{
   /* display: inline-block; */
+  font-family: inherit;
+  font-size: large;
+  text-align: center;
   border-color: skyblue;
   padding: 5px 12px;
   background-color: skyblue;
   color: black;
   border-radius: 5px;
-  cursor: pointer;
+  cursor: pointer;  
 }
 
 .Row{
   display: flex;
   justify-content: center; /* Center the button group */
-  gap: 5px;               /* Space BETWEEN the buttons */
-  margin-top: 1px;        /* Optional: to move it down */
+  gap: 0.3vw;               /* Space BETWEEN the buttons */
+  margin-top: 0.2vh;        /* Optional: to move it down */
 }
 
 input{
@@ -87,4 +102,146 @@ input{
   position: fixed;
   bottom: 1%;
   display: flex;
+}
+
+.container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 0.1vw; /* spacing between boxes */
+}
+
+.rocket {
+  border: 0.25vh solid skyblue;
+  width: 60vw;
+  height: 65vh;
+  border-radius: 1vh;
+}
+
+#rocketCanvas {
+  border: 1px solid black;
+  width: 50vw;
+  height: 55vh;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.side-box {
+  width: 19vw;
+  height: 65vh;
+  border: 0.25vh solid skyblue;
+  border-radius: 1vh;
+  /* background-color: #eaeaea; optional */
+}
+
+.left-box, .right-box {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  /* height: 65vh; keep consistent with rocket */
+}
+
+#Sim,#Reset {
+  align-self: center; /* centers it horizontally */
+  width: fit-content;
+  margin-top: auto;
+  margin-bottom: 0.5vh;
+}
+
+#Live{
+  position: fixed;
+  bottom: 13.5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  /* z-index: 100; */
+}
+
+#engineSlider {
+  width: 50vw;
+  z-index: 10;
+  accent-color: skyblue;
+}
+
+.Reg, .Film {
+  text-align: left;
+  margin-top: 1vh;
+  margin-left: 0.5vw;
+}
+
+input[role="switch"] {
+  appearance: none;
+  width: 2.8em;
+  height: 1.4em;
+  background-color: black;
+  border: 2px solid skyblue;
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+input[role="switch"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.2em;
+  transform: translateY(-50%);
+  width: 1em;
+  height: 1em;
+  background-color: skyblue;
+  border-radius: 50%;
+  transition: left 0.3s ease, background-color 0.3s ease;
+}
+
+.Variables {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.5vh;
+  margin-left: 0.5vw;
+  align-items: center; /* optional: center inputs */
+}
+
+input[role="switch"]:checked {
+  background-color: skyblue;
+}
+
+input[role="switch"]:checked::after {
+  left: calc(100% - 1.2em); /* 0.2em padding + 1em thumb */
+  background-color: black;
+}
+
+.switch-row {
+  margin-left: 0.4vw;
+  display: flex;
+  align-items: center; /* vertically center text and switch */
+  justify-content: space-between;
+  font-family: "Audiowide", sans-serif;
+  font-size: 1em;
+  color: skyblue;
+}
+
+.Variables input {
+  width: 12vw;               /* wider input box */
+  height: 2vh;               /* taller input box */
+  font-size: 1em;            /* larger text */
+  padding: 0.5vh 0.8vw;      /* internal spacing */
+  background-color: skyblue;
+  color: black;
+  border: none;
+  border-radius: 5px;
+  text-align: center;
+  cursor: text;
+}
+
+.Variables input::placeholder {
+  color: black;             /* or match to your regular text color */
+  opacity: 0.5;               /* ensures it's not faded */
+  font-family: "Audiowide", sans-serif;
 }

@@ -9,3 +9,11 @@ To add changes use this sequence:
 git add .
 git commit -m "Comment"
 git push -u origin main
+
+TO DO:
+
+Make the slider change the color of the corresponding point in the engine
+Implement Regen cooling simulation
+Make data be written into a json file
+Use data from json to assign variables to sim
+Implement film cooling simulation

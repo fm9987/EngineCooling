@@ -3,53 +3,93 @@
     <head>
         <title>Rocket Cooling</title>
         <link rel="stylesheet" href="main.css" />
+        <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
     </head>
 
     <body>
         <div class="Title"><h1>Rocket Cooling simulation</h1></div>
         <div class="help Button">?</div>
         <div class="Data Button" onclick="openData()">Data</div>
-        <!-- Engine outline selector -->
-        <div class="Button" id="FileSelector">
-            <label id="fileInput">Engine shape:</label>
-        </div>
        
-        <!-- Simulation type selector -->
-        <div class="Row" id="type" style="display: none;">
-        <!-- <div class="Row" id="type"> -->
-            <div class="Button" id="R">Regen cooling</div>
-            <div class="Button" id="F">Film cooling</div>
+        <!-- Menus -->
+        <div class="container">
+            <!-- Left menu -->
+            <div class="side-box left-box">
+                <!-- Select the file you want to display -->
+                <div class="Button" id="FileSelector">
+                    <label id="fileInput">Engine shape:</label>
+                </div> 
+
+                <!-- Regen cooling option -->
+                <div class="Button2 Reg switch-row" id="Reg" style="display: none;">
+                    <span class="Button2">Regen cooling</span>
+                    <input type="checkbox" role="switch" id="R"> 
+                </div>
+                <!-- Regen cooling variables-->
+                <!-- <div class="Variables" style="display: none;"> -->
+                <div class="Variables" id="Reg_V" style="display: none;">
+                    <input type="text" placeholder="M dot">
+                    <input type="text" placeholder="T0">
+                    <input type="text" placeholder="P0">
+                    <input type="text" placeholder="# Channels">
+                </div>
+
+
+                <!-- Film cooling option -->
+                <div class="Button2 Film switch-row" id="Film" style="display: none;">
+                    <span>Film cooling</span>
+                    <input type="checkbox" role="switch" id="F"> 
+                </div>
+                <!-- Film cooling variables -->
+                <!-- <div class="Variables" style="display: none;"> -->
+                <div class="Variables" id="Film_V" style="display: none;">
+                    <input type="text" placeholder="M dot">
+                    <input type="text" placeholder="T0">
+                    <input type="text" placeholder="P0">
+                    <input type="text" placeholder="# Channels">
+                    <input type="Location" placeholder="Starting Point">
+                    <!-- <div class="Button">Location</div> -->
+                </div>
+
+                <!-- Add Initial Conditions of the Sim-->
+                <div class="Button" id="Param" style="display: none"></div>
+
+                <!-- Run simulation here -->
+                <div class="Button" id="Sim" style="display: none;">
+                    Run simulation
+                </div>
+            </div>
+
+            <div id="canvas" class="rocket">
+                <div id="Status" class="Button2" id="Status" style="display: none;">Status:</div>
+                <canvas id="rocketCanvas"></canvas>
+            </div>
+
+            <!-- Results handling -->
+            <div class="side-box right-box">
+                <!-- Choose the output to look at from the simulation -->
+                <!-- <div id="Results" class="Button2" style="display: none;"> -->
+                <div id="Results" class="Button2">
+                    <select>
+                        <option value="T_W">Temperature Wall</option>
+                        <option value="T_C">Temperature Coolant</option>
+                        <option value="P_C">Pressure Coolant</option>
+                        <option value="Sigma">Stress Wall</option>
+                    </select>
+                </div>
+                <!-- Shows the ColorBar based on the results -->
+                <div id="ColorBar" style="display: none;"></div>
+
+
+                <!-- Resets everything -->
+                <div class="Button" id="Reset">Reset</div>
+            </div>
         </div>
 
-        <!-- Regen parameters -->
-        <div class="Row" id="Reg" style="display: none">
-            <input type="text" id="N" placeholder="# Channels" class="user-input" />
-            <input type="text" id="w" placeholder="Width [mm]" class="user-input" />
-            <input type="text" id="h" placeholder="Height [mm]" class="user-input" />
-        </div>
-        <div id="Regen" class="Button" style="display: none;">Submit</div>
-       
-        <!-- Drawing of the rocket -->
-        <canvas id="rocketCanvas" width="600" height="400" style="border:1px solid black;"></canvas>
-
-        <!-- Run the simulation here -->
-        <!-- <div class="Button" id="Sim" style="display: none"> -->
-        <div class="Button" id="Sim">
-            Run the simulation
-        </div>
-
-        <!-- Status of the simulation -->
-        <div id="simulationResult" style="margin-top: 10px; font-weight: bold;"></div>
-
-        <!-- Choose the output to look at from the simulation -->
-        <div id="Results" class="Button2" style="display: none;">
-            <select>
-                <option value="T_W">Temperature Wall</option>
-                <option value="T_C">Temperature Coolant</option>
-                <option value="P_C">Pressure Coolant</option>
-                <option value="Sigma">Stress wall</option>
-            </select>
-        </div>
+        
+        <input type="range" id="engineSlider" style="display: none;">
+	
+        <div class="Button2" id="Live" style="display: none;">Data of point selected</div>
 
         <script>
         document.getElementById('fileInput').addEventListener('click', async function (e) {   
@@ -57,9 +97,17 @@
             
             const filePath = await window.api.openFileDialog();
             if (!filePath) return;
+
             window.api.setInputFilePath(filePath);
             
             const content = await window.api.readCSV(filePath);
+            document.getElementById('Sim').style.display = 'block';
+            document.getElementById('Reg').style.display = 'block';
+            document.getElementById('Film').style.display = 'block';
+            document.getElementById('Status').style.display = 'block';
+            document.getElementById('Results').style.display = 'block';
+            document.getElementById('Live').style.display = 'block';
+
 
 
             // Parse CSV
@@ -75,113 +123,123 @@
             document.getElementById('type').style.display = "block";
         });
 
-            
-            function drawRocket(points, values = []) {
-                const canvas = document.getElementById('rocketCanvas');
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('Sim').addEventListener('click', async function () {
+            const resultDiv = document.getElementById('simulationResult');
+            resultDiv.textContent = 'Running simulation...';
 
-                const maxX = Math.max(...points.map(p => p.x));
-                const maxR = Math.max(...points.map(p => p.r));
-                const scaleX = canvas.width / maxX;
-                const scaleY = canvas.height / (2 * maxR);
+            try {
+                const outputFile = await window.api.runSimulation();
+                const content = await window.api.readCSV(outputFile); // assume output is fixed
+                resultDiv.textContent = `It worked at least`;
 
-                ctx.lineWidth = 3;
-
-                // Use a gradient color based on values (e.g., temperature, stress)
-                function getColor(v, min, max) {
-                    const t = (v - min) / (max - min);
-                    const r = Math.round(255 * t);
-                    const b = Math.round(255 * (1 - t));
-                    return `rgb(${r},0,${b})`;
-                }
-
-                const minVal = Math.min(...values);
-                const maxVal = Math.max(...values);
-
-                // Draw upper side
-                for (let i = 0; i < points.length - 1; i++) {
-                    const p1 = points[i];
-                    const p2 = points[i + 1];
-                    const x1 = p1.x * scaleX;
-                    const y1 = canvas.height / 2 - p1.r * scaleY;
-                    const x2 = p2.x * scaleX;
-                    const y2 = canvas.height / 2 - p2.r * scaleY;
-
-                    const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
-                    ctx.strokeStyle = color;
-
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                }
-
-                // Draw lower side (mirrored)
-                for (let i = points.length - 1; i > 0; i--) {
-                    const p1 = points[i];
-                    const p2 = points[i - 1];
-                    const x1 = p1.x * scaleX;
-                    const y1 = canvas.height / 2 + p1.r * scaleY;
-                    const x2 = p2.x * scaleX;
-                    const y2 = canvas.height / 2 + p2.r * scaleY;
-
-                    const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
-                    ctx.strokeStyle = color;
-
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                }
+                // Add code to draw the rocket
+                const lines = content.trim().split('\n');
+                const coords = lines.slice(1).map(line => {
+                    const [x, r] = line.split(',').map(Number);
+                    return { x, r };
+                });
+                const values = lines.slice(1).map(line => {
+                    const [a,b,c] = line.split(',').map(Number);
+                    return {c};
+                })
+                drawRocket(coords, values);
+                resultDiv.textContent = `Did it not show the colors?`;
+            } catch (error) {
+                resultDiv.textContent =  error;
             }
 
-            document.getElementById('Sim').addEventListener('click', async function () {
-                const resultDiv = document.getElementById('simulationResult');
-                resultDiv.textContent = 'Running simulation...';
+            document.getElementById('Results').style.display = "block";
+        });
 
-                try {
-                    const outputFile = await window.api.runSimulation();
-                    const content = await window.api.readCSV(outputFile); // assume output is fixed
-                    resultDiv.textContent = `It worked at least`;
+        document.getElementById('R').addEventListener('change', function () {
+            const isChecked = this.checked;
 
-                    // Add code to draw the rocket
-                    const lines = content.trim().split('\n');
-                    const coords = lines.slice(1).map(line => {
-                        const [x, r] = line.split(',').map(Number);
-                        return { x, r };
-                    });
-                    const values = lines.slice(1).map(line => {
-                        const [a,b,c] = line.split(',').map(Number);
-                        return {c};
-                    })
-                    drawRocket(coords, values);
-                    resultDiv.textContent = `Did it not show the colors?`;
-                } catch (error) {
-                    resultDiv.textContent =  error;
-                }
+            if (isChecked) {
+                document.getElementById('Reg_V').style.display = 'block';
+                console.log("Regen cooling enabled");
+            } else {
+                document.getElementById('Reg_V').style.display = 'none';
+                console.log("Regen cooling disabled");
+            }
+        });
 
-                document.getElementById('Results').style.display = "block";
-            });
+        document.getElementById('F').addEventListener('change', function () {
+            const isChecked = this.checked;
+
+            if (isChecked) {
+                document.getElementById('Film_V').style.display = 'block';
+                document.getElementById('engineSlider').style.display = 'block';
+                console.log("Regen cooling enabled");
+            } else {
+                document.getElementById('Film_V').style.display = 'none';
+                document.getElementById('engineSlider').style.display = 'none';
+                console.log("Regen cooling disabled");
+            }
+        });
        
-            document.getElementById('R').addEventListener('click',function(){
-                const a = document.getElementById('Reg');
-                const b = document.getElementById('Regen');
-                a.style.display = "block";
-                b.style.display = "block";
-            });
+        const { ipcRenderer } = require('electron');
 
-            document.getElementById('Regen').addEventListener('click',function(){
-                const N = document.getElementById('N').value;
-                const w = document.getElementById('w').value;
-                const h = document.getElementById('h').value;
+        function drawRocket(points, values = []) {
+            const canvas = document.getElementById('rocketCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                console.log(`You gave: Channels=${N}, Width=${w}mm, Height=${h}mm`);
-            });
+            const maxX = Math.max(...points.map(p => p.x));
+            const maxR = Math.max(...points.map(p => p.r));
+            const scaleX = canvas.width / maxX;
+            const scaleY = canvas.height / (2 * maxR);
 
-            const { ipcRenderer } = require('electron');
+            ctx.lineWidth = 3;
 
-            function openData() {
+            // Use a gradient color based on values (e.g., temperature, stress)
+            function getColor(v, min, max) {
+                const t = (v - min) / (max - min);
+                const r = Math.round(255 * t);
+                const b = Math.round(255 * (1 - t));
+                return `rgb(${r},0,${b})`;
+            }
+
+            const minVal = Math.min(...values);
+            const maxVal = Math.max(...values);
+
+            // Draw upper side
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                const x1 = p1.x * scaleX;
+                const y1 = canvas.height / 2 - p1.r * scaleY;
+                const x2 = p2.x * scaleX;
+                const y2 = canvas.height / 2 - p2.r * scaleY;
+
+                const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+                ctx.strokeStyle = color;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+
+            // Draw lower side (mirrored)
+            for (let i = points.length - 1; i > 0; i--) {
+                const p1 = points[i];
+                const p2 = points[i - 1];
+                const x1 = p1.x * scaleX;
+                const y1 = canvas.height / 2 + p1.r * scaleY;
+                const x2 = p2.x * scaleX;
+                const y2 = canvas.height / 2 + p2.r * scaleY;
+
+                const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+                ctx.strokeStyle = color;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+
+        function openData() {
             ipcRenderer.send('open-data-window');
             }
        </script>
