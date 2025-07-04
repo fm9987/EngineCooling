@@ -79,11 +79,21 @@ body{
   cursor: pointer;  
 }
 
+
 .Row{
   display: flex;
   justify-content: center; /* Center the button group */
   gap: 0.3vw;               /* Space BETWEEN the buttons */
   margin-top: 0.2vh;        /* Optional: to move it down */
+}
+
+ #ColorBar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;      /* horizontal center */
+  justify-content: center;  /* vertical center */
+  height: 100%;
+  width: 100%;
 }
 
 input{
@@ -139,6 +149,7 @@ input{
   /* background-color: #eaeaea; optional */
 }
 
+
 .left-box, .right-box {
   display: flex;
   flex-direction: column;
@@ -151,6 +162,15 @@ input{
   width: fit-content;
   margin-top: auto;
   margin-bottom: 0.5vh;
+  z-index: 10;
+}
+
+#Result {
+  align-self: center; /* centers it horizontally */
+  width: fit-content;
+  margin-top: 0.5vh;
+  margin-bottom: auto;
+  z-index: 10;
 }
 
 #Live{
@@ -244,4 +264,8 @@ input[role="switch"]:checked::after {
   color: black;             /* or match to your regular text color */
   opacity: 0.5;               /* ensures it's not faded */
   font-family: "Audiowide", sans-serif;
+}
+
+#MAX{
+  margin-top: 4.5vh;
 }

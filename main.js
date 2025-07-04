@@ -110,3 +110,7 @@ ipcMain.handle('dialog:openFile', async () => {
     return result.filePaths[0];
   }
 });
+
+ipcMain.handle('reset', async () => {
+    mainWindow.reload();
+})

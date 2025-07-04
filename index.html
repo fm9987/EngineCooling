@@ -68,17 +68,17 @@
             <!-- Results handling -->
             <div class="side-box right-box">
                 <!-- Choose the output to look at from the simulation -->
-                <!-- <div id="Results" class="Button2" style="display: none;"> -->
-                <div id="Results" class="Button2">
-                    <select>
-                        <option value="T_W">Temperature Wall</option>
-                        <option value="T_C">Temperature Coolant</option>
-                        <option value="P_C">Pressure Coolant</option>
-                        <option value="Sigma">Stress Wall</option>
+                <div id="Results" class="Button2" style="display: none;">
+                    <select id="Choose">
                     </select>
                 </div>
                 <!-- Shows the ColorBar based on the results -->
-                <div id="ColorBar" style="display: none;"></div>
+                <!-- <div id="ColorBar" style="display: none;"> -->
+                <div id="ColorBar">
+                    <div id="MAX" class="Button2" style="display: none;">MAX</div>
+                    <canvas id="legendCanvas" width="75%" height="300%"></canvas>
+                    <div id="MIN" class="Button2" style="display: none;">MIN</div>
+                </div>
 
 
                 <!-- Resets everything -->
@@ -92,6 +92,9 @@
         <div class="Button2" id="Live" style="display: none;">Data of point selected</div>
 
         <script>
+        let csvLines = []; // global variable to store parsed lines
+        let csvHeaders = [];
+
         document.getElementById('fileInput').addEventListener('click', async function (e) {   
             const label = document.getElementById('fileLabel');
             
@@ -105,7 +108,6 @@
             document.getElementById('Reg').style.display = 'block';
             document.getElementById('Film').style.display = 'block';
             document.getElementById('Status').style.display = 'block';
-            document.getElementById('Results').style.display = 'block';
             document.getElementById('Live').style.display = 'block';
 
 
@@ -124,32 +126,67 @@
         });
 
         document.getElementById('Sim').addEventListener('click', async function () {
-            const resultDiv = document.getElementById('simulationResult');
+            const resultDiv = document.getElementById('Status');
             resultDiv.textContent = 'Running simulation...';
 
-            try {
-                const outputFile = await window.api.runSimulation();
-                const content = await window.api.readCSV(outputFile); // assume output is fixed
-                resultDiv.textContent = `It worked at least`;
+            const outputFile = await window.api.runSimulation();            
+            resultDiv.textContent = 'Simulation Finished';
+            const content = await window.api.readCSV(outputFile); // assume output is fixed
 
-                // Add code to draw the rocket
-                const lines = content.trim().split('\n');
-                const coords = lines.slice(1).map(line => {
-                    const [x, r] = line.split(',').map(Number);
-                    return { x, r };
-                });
-                const values = lines.slice(1).map(line => {
-                    const [a,b,c] = line.split(',').map(Number);
-                    return {c};
-                })
-                drawRocket(coords, values);
-                resultDiv.textContent = `Did it not show the colors?`;
-            } catch (error) {
-                resultDiv.textContent =  error;
-            }
+            const colorBar = document.getElementById('ColorBar');
+            document.getElementById('Results').style.display = 'block';
+            colorBar.style.display = 'block';
+            document.getElementById('engineSlider').style.display = 'none';
 
+            const lines = content.trim().split('\n');
+            csvLines = lines;
+
+            // Extract headers from the first line
+            const headers = lines[0].split(',');
+            csvHeaders = headers;
+
+            // Populate the <select> dropdown
+            const selectElement = document.getElementById('Choose');
+            selectElement.innerHTML = ''; // Clear existing options
+            
+            headers.forEach((header, index) => {
+                if (index > 1) {  // Skip x and r columns
+                    const option = document.createElement('option');
+                    option.value = header;
+                    option.textContent = header;
+                    selectElement.appendChild(option);
+                }
+            });
             document.getElementById('Results').style.display = "block";
         });
+
+        document.getElementById('Choose').addEventListener('change', function (){
+            // Add code to draw the rocket
+            const headers = csvHeaders;
+            const selectedOutput = document.getElementById('Choose').value;
+            const columnIndex = headers.indexOf(selectedOutput);
+            const lines = csvLines;
+            document.getElementById('ColorBar').style.display = 'block';
+
+            const val = lines.slice(1).map(line => {
+                const cols = line.split(',').map(Number);
+                return cols[columnIndex];
+            });
+
+            const minVal = Math.min(...val);
+            const maxVal = Math.max(...val);
+
+            const selected = this.value;
+
+            const coords = lines.slice(1).map(line => {
+                const [x, r] = line.split(',').map(Number);
+                return { x, r };
+            });
+
+            drawRocket(coords, val);
+            drawColorBar(minVal,maxVal);
+        });
+
 
         document.getElementById('R').addEventListener('change', function () {
             const isChecked = this.checked;
@@ -161,6 +198,10 @@
                 document.getElementById('Reg_V').style.display = 'none';
                 console.log("Regen cooling disabled");
             }
+        });
+
+        document.getElementById('Reset').addEventListener('click', async function (){
+            await window.api.reset();
         });
 
         document.getElementById('F').addEventListener('change', function () {
@@ -182,17 +223,27 @@
         function drawRocket(points, values = []) {
             const canvas = document.getElementById('rocketCanvas');
             const ctx = canvas.getContext('2d');
+
+            // Set canvas resolution to match CSS size
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Add margin to avoid clipping (in pixels)
+            const marginX = 10;
+            const marginY = 10;
 
             const maxX = Math.max(...points.map(p => p.x));
             const maxR = Math.max(...points.map(p => p.r));
-            const scaleX = canvas.width / maxX;
-            const scaleY = canvas.height / (2 * maxR);
+            const scaleX = (canvas.width - 2 * marginX) / maxX;
+            const scaleY = (canvas.height - 2 * marginY) / (2 * maxR);
 
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 5;
 
             // Use a gradient color based on values (e.g., temperature, stress)
             function getColor(v, min, max) {
+                if (max === min) return 'rgb(0,0,255)';
                 const t = (v - min) / (max - min);
                 const r = Math.round(255 * t);
                 const b = Math.round(255 * (1 - t));
@@ -206,9 +257,9 @@
             for (let i = 0; i < points.length - 1; i++) {
                 const p1 = points[i];
                 const p2 = points[i + 1];
-                const x1 = p1.x * scaleX;
+                const x1 = p1.x * scaleX + marginX;
                 const y1 = canvas.height / 2 - p1.r * scaleY;
-                const x2 = p2.x * scaleX;
+                const x2 = p2.x * scaleX + marginX;
                 const y2 = canvas.height / 2 - p2.r * scaleY;
 
                 const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
@@ -224,9 +275,9 @@
             for (let i = points.length - 1; i > 0; i--) {
                 const p1 = points[i];
                 const p2 = points[i - 1];
-                const x1 = p1.x * scaleX;
+                const x1 = p1.x * scaleX + marginX;
                 const y1 = canvas.height / 2 + p1.r * scaleY;
-                const x2 = p2.x * scaleX;
+                const x2 = p2.x * scaleX + marginX;
                 const y2 = canvas.height / 2 + p2.r * scaleY;
 
                 const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
@@ -237,6 +288,27 @@
                 ctx.lineTo(x2, y2);
                 ctx.stroke();
             }
+        }
+
+        function drawColorBar(minVal, maxVal) {
+            const canvas = document.getElementById('legendCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const width = canvas.width;
+            const height = canvas.height;
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, 'rgb(255,0,0)'); // max - red
+            gradient.addColorStop(1, 'rgb(0,0,255)'); // min - blue
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw min and max labels
+            document.getElementById('MAX').textContent = maxVal.toFixed(2);
+            document.getElementById('MIN').textContent = minVal.toFixed(2);
+            document.getElementById('MAX').style.display = 'block';
+            document.getElementById('MIN').style.display = 'block';
         }
 
         function openData() {
