@@ -89,7 +89,11 @@
         
         <input type="range" id="engineSlider" style="display: none;">
 	
-        <div class="Button2" id="Live" style="display: none;">Data of point selected</div>
+        <div class="Error" id="Error">
+            Display error messages here
+        </div>
+
+
 
         <script>
         let csvLines = []; // global variable to store parsed lines
@@ -190,14 +194,8 @@
 
         document.getElementById('R').addEventListener('change', function () {
             const isChecked = this.checked;
-
-            if (isChecked) {
-                document.getElementById('Reg_V').style.display = 'block';
-                console.log("Regen cooling enabled");
-            } else {
-                document.getElementById('Reg_V').style.display = 'none';
-                console.log("Regen cooling disabled");
-            }
+            document.getElementById('Reg_V').style.display = isChecked ? 'block' : 'none';
+            window.api.setSimType('regen', isChecked);
         });
 
         document.getElementById('Reset').addEventListener('click', async function (){
@@ -206,16 +204,9 @@
 
         document.getElementById('F').addEventListener('change', function () {
             const isChecked = this.checked;
-
-            if (isChecked) {
-                document.getElementById('Film_V').style.display = 'block';
-                document.getElementById('engineSlider').style.display = 'block';
-                console.log("Regen cooling enabled");
-            } else {
-                document.getElementById('Film_V').style.display = 'none';
-                document.getElementById('engineSlider').style.display = 'none';
-                console.log("Regen cooling disabled");
-            }
+            document.getElementById('Film_V').style.display = isChecked ? 'block' : 'none';
+            document.getElementById('engineSlider').style.display = isChecked ? 'block' : 'none';
+            window.api.setSimType('film', isChecked);
         });
        
         const { ipcRenderer } = require('electron');

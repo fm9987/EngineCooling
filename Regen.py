@@ -134,11 +134,11 @@ class sim():
         # sigma = 1/[((1/2)*T_wg/Tc_ns*0.5*(1+(g-1)*M^2)+0.5)^0.68 * (1+0.5*(1+(g-1)*M^2))^0.12]
         return 1
 
-import os
-import pandas as pd
-input_file="example.csv"
-input_dir = os.path.dirname(os.path.abspath(input_file))
-#Obtain the dataframe to start with
-df = pd.read_csv(input_file)
+# import os
+# import pandas as pd
+# input_file="example.csv"
+# input_dir = os.path.dirname(os.path.abspath(input_file))
+# #Obtain the dataframe to start with
+# df = pd.read_csv(input_file)
 
-Hey=sim(df)
+# Hey=sim(df)

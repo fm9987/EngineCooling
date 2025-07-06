@@ -1,7 +1,9 @@
 {
-  "pc": "7.2",
+  "pc": "6.9",
   "mr": "2.3",
   "mdot": "25",
   "ox": "LOX",
-  "fuel": "RP1"
+  "fuel": "RP1",
+  "regen": false,
+  "film": false
 }

@@ -270,3 +270,20 @@ input[role="switch"]:checked::after {
 #MAX{
   margin-top: 4.5vh;
 }
+
+.Error {
+  position: fixed;
+  bottom: 0.25vh;
+  left: 0.75vw;
+  right: 0.75vw;
+  height: 17%;
+  background-color: black;
+  border: 0.25vh solid skyblue;
+  border-radius: 1vh;
+  text-align: left;
+  font-family: "Audiowide", sans-serif;
+  font-size: 1em;
+  padding: 0.5vh 0.5vw;
+  z-index: 10;
+  box-sizing: border-box;
+}

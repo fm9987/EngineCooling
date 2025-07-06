@@ -120,3 +120,28 @@ ipcMain.handle('dialog:openFile', async () => {
 ipcMain.handle('reset', async () => {
     mainWindow.reload();
 })
+
+ipcMain.handle('sim-type', async (event, type, enabled) => {
+  const filePath = path.join(__dirname, 'IC.json');
+
+  let data = {};
+  try {
+    if (fs.existsSync(filePath)) {
+      const content = fs.readFileSync(filePath, 'utf8');
+      data = JSON.parse(content);
+    }
+  } catch (err) {
+    console.error('Error reading IC.json:', err);
+  }
+
+  // Update only the specified type
+  data[type] = !!enabled;
+
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  } catch (err) {
+    console.error('Error writing IC.json:', err);
+  }
+
+  return true;
+});
