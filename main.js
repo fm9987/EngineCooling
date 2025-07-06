@@ -22,6 +22,7 @@ function createMainWindow() {
     title: 'Main',
     width: width*0.95,
     height: height,
+    icon: path.join(__dirname, 'RocketCooling.ico'),  // use .icns for macOS
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // ✅ POINT TO preload.js
       nodeIntegration: false,
@@ -42,6 +43,7 @@ app.whenReady().then(createMainWindow);
 ipcMain.on('open-data-window', () => {
 
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+
   if (dataWindow) {
     dataWindow.focus();
     return;
@@ -53,8 +55,10 @@ ipcMain.on('open-data-window', () => {
     title: "Simulation Data",
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
-    }
+      contextIsolation: false,
+      preload: path.join(__dirname, 'preload.js')
+    },
+    autoHideMenuBar: true // ✅ This hides the menu bar!
   });
 
   dataWindow.loadFile(path.join(__dirname, 'simulation.html'));
@@ -63,7 +67,6 @@ ipcMain.on('open-data-window', () => {
     dataWindow = null;
   });
 });
-
 
 ipcMain.handle('run-simulation', async () => {
     return new Promise((resolve, reject) => {

@@ -7,7 +7,7 @@
     </head>
 
     <body>
-        <div class="Title"><h1>Rocket Cooling simulation</h1></div>
+        <div id="TRY" class="Title"><h1>Rocket Cooling simulation</h1></div>
         <div class="help Button">?</div>
         <div class="Data Button" onclick="openData()">Data</div>
        
@@ -312,8 +312,8 @@
         }
 
         function openData() {
-            ipcRenderer.send('open-data-window');
-            }
+            window.api.openDataWindow();
+        }            
        </script>
     </body>
 </html>

@@ -100,6 +100,7 @@ input{
   /* display: inline-block; */
   width: 75px;
   text-align: center;
+  font-family: "Audiowide", sans-serif;
   padding: 5px 5px;
   background-color: skyblue;
   color: black;

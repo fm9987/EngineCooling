@@ -3,14 +3,27 @@
 <head>
     <title>Simulation data</title>
     <link rel="stylesheet" href="main.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
 </head>
 
 <body>
-    <div id="Temperature">
-        T_0 = <input type="text" id="T" placeholder="3400" class="user-input" /> [K]
-    </div>
+    <!-- <div id="Temperature">
+        Temperature Chamber = <input type="text" id="Tc" placeholder="3400" class="user-input" /> [K]
+    </div> -->
     <div id="Pressure">
-        P_0 = <input type="text" id="P" placeholder="6.9" class="user-input" /> [MPa]
+        Pressure Chamber = <input type="text" id="pc" placeholder="6.9" class="user-input" /> [MPa]
+    </div>
+    <div id="Mr">
+        Mass Ratio = <input type="text" id="mr" placeholder="2.3" class="user-input" />
+    </div>
+    <div id="Mdot total">
+        Mass flow rate total = <input type="text" id="mdot" placeholder="25" class="user-input" /> [Kg]
+    </div>
+    <div id="Oxidizer">
+        Oxidizer = <input type="text" id="ox" placeholder="LOX" class="user-input" />
+    </div>
+    <div id="Fuel">
+        Fuel = <input type="text" id="fuel" placeholder="RP1" class="user-input" />
     </div>
 
 
@@ -25,11 +38,23 @@
         if (fs.existsSync(filePath)) {
             try {
                 const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-                if (data.T_0) {
-                    document.getElementById('T').placeholder = data.T_0;
+                // if (data.Tc) {
+                //     document.getElementById('Tc').placeholder = data.T_0;
+                // }
+                if (data.pc) {
+                    document.getElementById('pc').placeholder = data.pc;
                 }
-                if (data.P_0) {
-                    document.getElementById('P').placeholder = data.P_0;
+                if (data.mr) {
+                    document.getElementById('mr').placeholder = data.mr;
+                }
+                if (data.mdot) {
+                    document.getElementById('mdot').placeholder = data.mdot;
+                }
+                if (data.ox) {
+                    document.getElementById('ox').placeholder = data.ox;
+                }
+                if (data.fuel) {
+                    document.getElementById('fuel').placeholder = data.fuel;
                 }
             } catch (err) {
                 console.error('Error loading JSON:', err);
@@ -38,8 +63,12 @@
     };
     
     function save(){
-        const T = document.getElementById('T').value;
-        const P = document.getElementById('P').value;
+        // const T = document.getElementById('T').value;
+        const pc = document.getElementById('pc').value;
+        const mr = document.getElementById('mr').value;
+        const mdot = document.getElementById('mdot').value;
+        const ox = document.getElementById('ox').value;
+        const fuel = document.getElementById('fuel').value;
         const fs = require('fs');
         const path = require('path');
         const filePath = path.join(__dirname, 'IC.json');
@@ -56,11 +85,23 @@
         }
 
         // Only update keys if input is not empty
-        if (T !== '') {
-        existingData.T_0 = T;
+        // if (T !== '') {
+        // existingData.T_0 = T;
+        // }
+        if (pc !== '') {
+        existingData.pc = pc;
         }
-        if (P !== '') {
-        existingData.P_0 = P;
+        if (mr !== '') {
+        existingData.mr = mr;
+        }
+        if (mdot !== '') {
+        existingData.mdot = mdot;
+        }
+        if (ox !== '') {
+        existingData.ox = ox;
+        }
+        if (fuel !== '') {
+        existingData.fuel = fuel;
         }
 
         fs.writeFile(filePath, JSON.stringify(existingData, null, 2), (err) => {
