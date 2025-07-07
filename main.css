@@ -284,6 +284,6 @@ input[role="switch"]:checked::after {
   font-family: "Audiowide", sans-serif;
   font-size: 1em;
   padding: 0.5vh 0.5vw;
-  z-index: 10;
+  z-index: 1;
   box-sizing: border-box;
 }

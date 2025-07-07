@@ -3,7 +3,7 @@ import pandas as pd
 import random
 import os
 import numpy as np
-import Regen as regen
+from Regen import final as regen
 # import Film as film
 import json
 
@@ -23,14 +23,18 @@ film_enabled = Types.get('film', False)
 
 if regen_enabled & film_enabled:
     print("They are both ON")
+    results=regen(df)
 elif regen_enabled:
-    print("Regenerative cooling is ON")
-    results=regen.final(df)
+    # print("Regenerative cooling is ON")
+    results=regen(df)
 elif film_enabled:
-    print("Film cooling is ON")
+    # print("Film cooling is ON")
     # Results=film.final(df)
+    results=regen(df)
 else:
-    print("They are both off dummy")
+    # results=pd.read_csv("output.csv")
+    results=regen(df)
+    # print("They are both off dummy")
 
 # #THIS JUST STORES IN THE SAME DIRECTORY (BE CAREFUL ON HOW TO CHANGE THIS)
 output_file = os.path.join(input_dir, "output.csv")

@@ -90,7 +90,6 @@
         <input type="range" id="engineSlider" style="display: none;">
 	
         <div class="Error" id="Error">
-            Display error messages here
         </div>
 
 
@@ -100,19 +99,19 @@
         let csvHeaders = [];
 
         document.getElementById('fileInput').addEventListener('click', async function (e) {   
-            const label = document.getElementById('fileLabel');
+            const label = this;
             
             const filePath = await window.api.openFileDialog();
             if (!filePath) return;
 
             window.api.setInputFilePath(filePath);
             
+
             const content = await window.api.readCSV(filePath);
             document.getElementById('Sim').style.display = 'block';
             document.getElementById('Reg').style.display = 'block';
             document.getElementById('Film').style.display = 'block';
             document.getElementById('Status').style.display = 'block';
-            document.getElementById('Live').style.display = 'block';
 
 
 
@@ -124,9 +123,9 @@
             });
 
             drawRocket(coords);
-            label.textContent = filePath.basename(filePath);
+            const fileName = filePath.split(/(\\|\/)/g).pop();
+            label.textContent = fileName;
             document.getElementById('Sim').style.display = "block";
-            document.getElementById('type').style.display = "block";
         });
 
         document.getElementById('Sim').addEventListener('click', async function () {
