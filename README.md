@@ -12,6 +12,7 @@ git push -u origin main
 
 TO DO:
 
+- Choose what data to display for the Regen Sim
 - Make error messages display into the error section on the app
 - Make the slider change the color of the corresponding point in the engine 
 - Implement Regen cooling simulation 

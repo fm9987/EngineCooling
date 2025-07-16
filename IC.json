@@ -4,6 +4,9 @@
   "mdot": "25",
   "ox": "LOX",
   "fuel": "RP1",
+  "R_number": "40",
+  "R_w": "0.00075",
+  "R_h": "0.00075",
   "regen": false,
   "film": false
 }

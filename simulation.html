@@ -10,20 +10,39 @@
     <!-- <div id="Temperature">
         Temperature Chamber = <input type="text" id="Tc" placeholder="3400" class="user-input" /> [K]
     </div> -->
-    <div id="Pressure">
-        Pressure Chamber = <input type="text" id="pc" placeholder="6.9" class="user-input" /> [MPa]
-    </div>
-    <div id="Mr">
-        Mass Ratio = <input type="text" id="mr" placeholder="2.3" class="user-input" />
-    </div>
-    <div id="Mdot total">
-        Mass flow rate total = <input type="text" id="mdot" placeholder="25" class="user-input" /> [Kg]
-    </div>
-    <div id="Oxidizer">
-        Oxidizer = <input type="text" id="ox" placeholder="LOX" class="user-input" />
-    </div>
-    <div id="Fuel">
-        Fuel = <input type="text" id="fuel" placeholder="RP1" class="user-input" />
+    
+    
+
+    <div class="container">
+        <!-- <div class="side-box2 left-box" id="Left" style="display: none"> -->
+        <div class="side-box2 left-box">
+            <div class="Title2" id="L" style="display: none">Regen Cooling</div>
+            <div class="All" id="L1" style="display: none">
+                Channel # = <input type="text" id="R_number" placeholder="25" class="user-input" /> <br>
+                At Throat:
+                Width = <input type="text" id="R_w" placeholder="0.0075" class="user-input" /> [m] <br>
+                Heigth = <input type="text" id="R_h" placeholder="0.0075" class="user-input" /> [m] <br>
+            </div>
+        </div>
+
+        <div class="side-box2" id="Middle">
+            <div class="Title2">All Data</div>
+            <div class="All">
+                Pressure Chamber = <input type="text" id="pc" placeholder="6.9" class="user-input" /> [MPa] <br>
+                Mass Ratio = <input type="text" id="mr" placeholder="2.3" class="user-input" /><br>
+                Mass flow rate total = <input type="text" id="mdot" placeholder="25" class="user-input" /> [Kg] <br>
+                Oxidizer = <input type="text" id="ox" placeholder="LOX" class="user-input" /><br>
+                Fuel = <input type="text" id="fuel" placeholder="RP1" class="user-input" />
+            </div>
+        </div>
+
+        <div class="side-box2 right-box">
+            <div class="Title2" id="R" style="display: none">Film Cooling</div>
+            <div class="All" id="R1" style="display: none">
+                Channel #1 = <input type="text" id="F_number" placeholder="25" class="user-input" /> <br>
+            </div>
+        
+        </div>
     </div>
 
 
@@ -36,28 +55,44 @@
     // Load existing values into inputs on page load
     window.onload = () => {
         if (fs.existsSync(filePath)) {
-            try {
-                const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-                // if (data.Tc) {
-                //     document.getElementById('Tc').placeholder = data.T_0;
-                // }
-                if (data.pc) {
-                    document.getElementById('pc').placeholder = data.pc;
-                }
-                if (data.mr) {
-                    document.getElementById('mr').placeholder = data.mr;
-                }
-                if (data.mdot) {
-                    document.getElementById('mdot').placeholder = data.mdot;
-                }
-                if (data.ox) {
-                    document.getElementById('ox').placeholder = data.ox;
-                }
-                if (data.fuel) {
-                    document.getElementById('fuel').placeholder = data.fuel;
-                }
-            } catch (err) {
-                console.error('Error loading JSON:', err);
+            const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            if (data.pc) {
+                document.getElementById('pc').placeholder = data.pc;
+            }
+            if (data.mr) {
+                document.getElementById('mr').placeholder = data.mr;
+            }
+            if (data.mdot) {
+                document.getElementById('mdot').placeholder = data.mdot;
+            }
+            if (data.ox) {
+                document.getElementById('ox').placeholder = data.ox;
+            }
+            if (data.fuel) {
+                document.getElementById('fuel').placeholder = data.fuel;
+            }
+            if (data.R_w) {
+                document.getElementById('R_w').placeholder = data.R_w;
+            }if (data.R_h) {
+                document.getElementById('R_h').placeholder = data.R_h;
+            }if (data.R_number) {
+                document.getElementById('R_number').placeholder = data.R_number;
+            }
+
+            if (data.regen) {
+                document.getElementById('L').style.display = 'block';
+                document.getElementById('L1').style.display = 'block';
+            } else {
+                document.getElementById('L').style.display = 'none';
+                document.getElementById('L1').style.display = 'none';
+            }
+
+            if (data.film) {
+                document.getElementById('R').style.display = 'block';
+                document.getElementById('R1').style.display = 'block';
+            } else {
+                document.getElementById('R').style.display = 'none';
+                document.getElementById('R1').style.display = 'none';
             }
         }
     };
@@ -68,6 +103,10 @@
         const mr = document.getElementById('mr').value;
         const mdot = document.getElementById('mdot').value;
         const ox = document.getElementById('ox').value;
+        const R_w = document.getElementById('R_w').value;
+        const R_h = document.getElementById('R_h').value;
+        const R_number = document.getElementById('R_number').value;
+        const F_number = document.getElementById('F_number').value;
         const fuel = document.getElementById('fuel').value;
         const fs = require('fs');
         const path = require('path');
@@ -102,6 +141,18 @@
         }
         if (fuel !== '') {
         existingData.fuel = fuel;
+        }
+        if (R_w !== '') {
+        existingData.R_w = R_w;
+        }
+        if (R_h !== '') {
+        existingData.R_h = R_h;
+        }
+        if (R_number !== '') {
+        existingData.R_number = R_number;
+        }
+        if (F_number !== '') {
+        existingData.R_number = R_number;
         }
 
         fs.writeFile(filePath, JSON.stringify(existingData, null, 2), (err) => {

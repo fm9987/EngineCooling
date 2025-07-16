@@ -287,3 +287,27 @@ input[role="switch"]:checked::after {
   z-index: 1;
   box-sizing: border-box;
 }
+
+.side-box2{
+  width: 30vw;
+  height: 65vh;
+  border: 0.25vh solid skyblue;
+  border-radius: 1vh;
+}
+
+.Title2{
+  position: relative;
+  /* position: fixed; */
+  top: 0.5vh;;
+  width: 100%;
+  text-align: center;
+  background-color: transparent;
+}
+
+.side-box2 .All{
+  position: relative;
+  margin-top: 7vh;
+  width: 100%;
+  text-align: center;
+  background-color: transparent;
+}

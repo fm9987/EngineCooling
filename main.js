@@ -50,8 +50,8 @@ ipcMain.on('open-data-window', () => {
   }
 
   dataWindow = new BrowserWindow({
-    width: width*0.5,
-    height: height*0.5,
+    width: width*0.8,
+    height: height*0.8,
     title: "Simulation Data",
     webPreferences: {
       nodeIntegration: true,

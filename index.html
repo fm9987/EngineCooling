@@ -87,7 +87,8 @@
         </div>
 
         
-        <input type="range" id="engineSlider" style="display: none;">
+        <input type="range" id="engineSlider" min="0" max="100">
+        <!-- <input type="range" id="engineSlider" style="display: none;"> -->
 	
         <div class="Error" id="Error">
         </div>
@@ -95,9 +96,30 @@
 
 
         <script>
+        window.onbeforeunload = () => {
+            const isChecked = false;
+            window.api.setSimType('regen', isChecked);
+            window.api.setSimType('film', isChecked);
+        };
         let csvLines = []; // global variable to store parsed lines
         let csvHeaders = [];
+        let coords = [];  // Add this at the top
+        let val = [];     // Add this at the top
+        const slider = document.getElementById("engineSlider");
+        const liveDisplay = document.getElementById("Error");
 
+        slider.addEventListener("input", () =>{
+            const location = Number(slider.value);
+            liveDisplay.innerText = "Data of point selected: " + slider.value;
+            const Film = document.getElementById('F').checked;
+            if (Film === true) {
+                drawRocket(points, [], location);
+                liveDisplay.innerText = "Data of point selected: " + slider.value;
+            }else{
+                liveDisplay.innerText = "Film is turned off";
+            }
+        });
+        
         document.getElementById('fileInput').addEventListener('click', async function (e) {   
             const label = this;
             
@@ -117,7 +139,7 @@
 
             // Parse CSV
             const lines = content.trim().split('\n');
-            const coords = lines.slice(1).map(line => {
+            coords = lines.slice(1).map(line => {
                 const [x, r] = line.split(',').map(Number);
                 return { x, r };
             });
@@ -126,6 +148,8 @@
             const fileName = filePath.split(/(\\|\/)/g).pop();
             label.textContent = fileName;
             document.getElementById('Sim').style.display = "block";
+            document.getElementById('engineSlider').max = coords.length - 1;
+            document.getElementById('engineSlider').value = 0;
         });
 
         document.getElementById('Sim').addEventListener('click', async function () {
@@ -171,7 +195,7 @@
             const lines = csvLines;
             document.getElementById('ColorBar').style.display = 'block';
 
-            const val = lines.slice(1).map(line => {
+            val = lines.slice(1).map(line => {
                 const cols = line.split(',').map(Number);
                 return cols[columnIndex];
             });
@@ -189,7 +213,6 @@
             drawRocket(coords, val);
             drawColorBar(minVal,maxVal);
         });
-
 
         document.getElementById('R').addEventListener('change', function () {
             const isChecked = this.checked;
@@ -210,75 +233,75 @@
        
         const { ipcRenderer } = require('electron');
 
-        function drawRocket(points, values = []) {
-            const canvas = document.getElementById('rocketCanvas');
-            const ctx = canvas.getContext('2d');
+        // function drawRocket(points, values = []) {
+        //     const canvas = document.getElementById('rocketCanvas');
+        //     const ctx = canvas.getContext('2d');
 
-            // Set canvas resolution to match CSS size
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
+        //     // Set canvas resolution to match CSS size
+        //     canvas.width = canvas.clientWidth;
+        //     canvas.height = canvas.clientHeight;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        //     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Add margin to avoid clipping (in pixels)
-            const marginX = 10;
-            const marginY = 10;
+        //     // Add margin to avoid clipping (in pixels)
+        //     const marginX = 10;
+        //     const marginY = 10;
 
-            const maxX = Math.max(...points.map(p => p.x));
-            const maxR = Math.max(...points.map(p => p.r));
-            const scaleX = (canvas.width - 2 * marginX) / maxX;
-            const scaleY = (canvas.height - 2 * marginY) / (2 * maxR);
+        //     const maxX = Math.max(...points.map(p => p.x));
+        //     const maxR = Math.max(...points.map(p => p.r));
+        //     const scaleX = (canvas.width - 2 * marginX) / maxX;
+        //     const scaleY = (canvas.height - 2 * marginY) / (2 * maxR);
 
-            ctx.lineWidth = 5;
+        //     ctx.lineWidth = 5;
 
-            // Use a gradient color based on values (e.g., temperature, stress)
-            function getColor(v, min, max) {
-                if (max === min) return 'rgb(0,0,255)';
-                const t = (v - min) / (max - min);
-                const r = Math.round(255 * t);
-                const b = Math.round(255 * (1 - t));
-                return `rgb(${r},0,${b})`;
-            }
+        //     // Use a gradient color based on values (e.g., temperature, stress)
+        //     function getColor(v, min, max) {
+        //         if (max === min) return 'rgb(0,0,255)';
+        //         const t = (v - min) / (max - min);
+        //         const r = Math.round(255 * t);
+        //         const b = Math.round(255 * (1 - t));
+        //         return `rgb(${r},0,${b})`;
+        //     }
 
-            const minVal = Math.min(...values);
-            const maxVal = Math.max(...values);
+        //     const minVal = Math.min(...values);
+        //     const maxVal = Math.max(...values);
 
-            // Draw upper side
-            for (let i = 0; i < points.length - 1; i++) {
-                const p1 = points[i];
-                const p2 = points[i + 1];
-                const x1 = p1.x * scaleX + marginX;
-                const y1 = canvas.height / 2 - p1.r * scaleY;
-                const x2 = p2.x * scaleX + marginX;
-                const y2 = canvas.height / 2 - p2.r * scaleY;
+        //     // Draw upper side
+        //     for (let i = 0; i < points.length - 1; i++) {
+        //         const p1 = points[i];
+        //         const p2 = points[i + 1];
+        //         const x1 = p1.x * scaleX + marginX;
+        //         const y1 = canvas.height / 2 - p1.r * scaleY;
+        //         const x2 = p2.x * scaleX + marginX;
+        //         const y2 = canvas.height / 2 - p2.r * scaleY;
 
-                const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
-                ctx.strokeStyle = color;
+        //         const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+        //         ctx.strokeStyle = color;
 
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-            }
+        //         ctx.beginPath();
+        //         ctx.moveTo(x1, y1);
+        //         ctx.lineTo(x2, y2);
+        //         ctx.stroke();
+        //     }
 
-            // Draw lower side (mirrored)
-            for (let i = points.length - 1; i > 0; i--) {
-                const p1 = points[i];
-                const p2 = points[i - 1];
-                const x1 = p1.x * scaleX + marginX;
-                const y1 = canvas.height / 2 + p1.r * scaleY;
-                const x2 = p2.x * scaleX + marginX;
-                const y2 = canvas.height / 2 + p2.r * scaleY;
+        //     // Draw lower side (mirrored)
+        //     for (let i = points.length - 1; i > 0; i--) {
+        //         const p1 = points[i];
+        //         const p2 = points[i - 1];
+        //         const x1 = p1.x * scaleX + marginX;
+        //         const y1 = canvas.height / 2 + p1.r * scaleY;
+        //         const x2 = p2.x * scaleX + marginX;
+        //         const y2 = canvas.height / 2 + p2.r * scaleY;
 
-                const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
-                ctx.strokeStyle = color;
+        //         const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+        //         ctx.strokeStyle = color;
 
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-            }
-        }
+        //         ctx.beginPath();
+        //         ctx.moveTo(x1, y1);
+        //         ctx.lineTo(x2, y2);
+        //         ctx.stroke();
+        //     }
+        // }
 
         function drawColorBar(minVal, maxVal) {
             const canvas = document.getElementById('legendCanvas');
@@ -288,8 +311,14 @@
             const height = canvas.height;
 
             const gradient = ctx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, 'rgb(255,0,0)'); // max - red
-            gradient.addColorStop(1, 'rgb(0,0,255)'); // min - blue
+            // Approximate 'jet' colormap using multiple stops
+            gradient.addColorStop(0.0,   '#800000'); // dark red
+            gradient.addColorStop(0.15,  '#ff0000'); // red
+            gradient.addColorStop(0.35,  '#ffff00'); // yellow
+            gradient.addColorStop(0.5,   '#00ff00'); // green
+            gradient.addColorStop(0.65,  '#00ffff'); // cyan
+            gradient.addColorStop(0.85,  '#0000ff'); // blue
+            gradient.addColorStop(1.0,   '#000080'); // dark blue
 
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, width, height);
@@ -303,7 +332,128 @@
 
         function openData() {
             window.api.openDataWindow();
-        }            
-       </script>
+        }
+        
+        document.getElementById('R').addEventListener('change', function () {
+            const isChecked = this.checked;
+            document.getElementById('Reg_V').style.display = isChecked ? 'block' : 'none';
+            window.api.setSimType('regen', isChecked);
+        });
+       
+        function drawRocket(points, values = [], highlightIndex = null) {
+            const canvas = document.getElementById('rocketCanvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const marginX = 10;
+            const marginY = 10;
+
+            const maxX = Math.max(...points.map(p => p.x));
+            const maxR = Math.max(...points.map(p => p.r));
+            const scaleX = (canvas.width - 2 * marginX) / maxX;
+            const scaleY = (canvas.height - 2 * marginY) / (2 * maxR);
+
+            const minVal = Math.min(...values);
+            const maxVal = Math.max(...values);
+
+            const defaultLineWidth = 5;
+            const highlightLineWidth = 10;
+
+            // Top half
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                const x1 = p1.x * scaleX + marginX;
+                const y1 = canvas.height / 2 - p1.r * scaleY;
+                const x2 = p2.x * scaleX + marginX;
+                const y2 = canvas.height / 2 - p2.r * scaleY;
+
+                let color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+                const isHighlighted = (highlightIndex !== null && (i === highlightIndex || i + 1 === highlightIndex));
+
+                ctx.lineWidth = isHighlighted ? highlightLineWidth : defaultLineWidth;
+                ctx.strokeStyle = isHighlighted ? '#FF0000' : color;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+
+            // Bottom half
+            for (let i = points.length - 1; i > 0; i--) {
+                const p1 = points[i];
+                const p2 = points[i - 1];
+                const x1 = p1.x * scaleX + marginX;
+                const y1 = canvas.height / 2 + p1.r * scaleY;
+                const x2 = p2.x * scaleX + marginX;
+                const y2 = canvas.height / 2 + p2.r * scaleY;
+
+                let color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+                const isHighlighted = (highlightIndex !== null && (i === highlightIndex || i - 1 === highlightIndex));
+
+                ctx.lineWidth = isHighlighted ? highlightLineWidth : defaultLineWidth;
+                ctx.strokeStyle = isHighlighted ? 'yellow' : color;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+
+            // Draw dot at selected point
+            if (highlightIndex !== null && points[highlightIndex]) {
+                const p = points[highlightIndex];
+                const x = p.x * scaleX + marginX;
+                const yTop = canvas.height / 2 - p.r * scaleY;
+                const yBottom = canvas.height / 2 + p.r * scaleY;
+
+                ctx.fillStyle = '#FF00FF';
+                ctx.beginPath();
+                ctx.arc(x, yTop, 6, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(x, yBottom, 6, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            function getColor(v, min, max) {
+                if (max === min) return 'rgb(0,0,255)'; // Default to blue if no range
+
+                const t = (v - min) / (max - min); // Normalize between 0 and 1
+
+                const r = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 3), 0, 1));
+                const g = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 2), 0, 1));
+                const b = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 1), 0, 1));
+
+                return `rgb(${r},${g},${b})`;
+
+                function clamp(x, min, max) {
+                    return Math.max(min, Math.min(max, x));
+                }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const slider = document.getElementById('engineSlider');
+            const errorBox = document.getElementById('Error');
+            errorBox.textContent = "I am called";
+            slider.addEventListener('input', function () {
+                const index = parseInt(this.value);
+                errorBox.textContent = `Slider index: ${index}`;
+
+                if (coords.length && val.length) {
+                    drawRocket(coords, val, index);
+                } else {
+                    errorBox.textContent = 'No data loaded yet.';
+                }
+            });
+        });
+        </script>
     </body>
 </html>

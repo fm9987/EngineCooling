@@ -29,6 +29,7 @@ class sim():
         self.pc = float(IC['pc'])  # Pressure in MPa or whatever unit
         self.mr = float(IC['mr'])  # Mixture ratio
         self.mdot = float(IC['mdot'])  # Mass flow rate
+        self.channel_count = float(IC['R_number']) # Number of channels
         self.oxidizer = IC['ox']
         self.fuel = IC['fuel']
 
