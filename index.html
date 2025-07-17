@@ -87,8 +87,8 @@
         </div>
 
         
-        <input type="range" id="engineSlider" min="0" max="100">
-        <!-- <input type="range" id="engineSlider" style="display: none;"> -->
+        <!-- <input type="range" id="engineSlider" min="0" max="100"> -->
+        <input type="range" id="engineSlider" style="display: none;">
 	
         <div class="Error" id="Error">
         </div>
@@ -108,17 +108,56 @@
         const slider = document.getElementById("engineSlider");
         const liveDisplay = document.getElementById("Error");
 
-        slider.addEventListener("input", () =>{
-            const location = Number(slider.value);
-            liveDisplay.innerText = "Data of point selected: " + slider.value;
+        slider.addEventListener("input", () => {
+            const canvas = document.getElementById('rocketCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const location1 = Number(slider.value);
+            const offset = 10;
+
             const Film = document.getElementById('F').checked;
-            if (Film === true) {
-                drawRocket(points, [], location);
-                liveDisplay.innerText = "Data of point selected: " + slider.value;
-            }else{
+
+            if (!Film) {
                 liveDisplay.innerText = "Film is turned off";
+                return;
             }
+
+            // Redraw rocket first
+            drawRocket(coords, val);
+
+            // Setup scale and margin same as in drawRocket
+            const marginX = 10;
+            const marginY = 10;
+            const maxX = Math.max(...coords.map(p => p.x));
+            const maxR = Math.max(...coords.map(p => p.r));
+            const scaleX = (canvas.width - 2 * marginX) / maxX;
+            const scaleY = (canvas.height - 2 * marginY) / (2 * maxR);
+            const centerY = canvas.height / 2;
+
+            // Get physical coordinates
+            const p1 = coords[location1];
+
+            // Location for circle
+            const x1 = p1.x * scaleX + marginX;
+            const y1_top = centerY - p1.r * scaleY;
+            const y1_bottom = centerY + p1.r * scaleY;
+
+
+            // Draw circles at both top and bottom of the wall
+            drawCircle(ctx, x1, y1_top);
+            drawCircle(ctx, x1, y1_bottom);
+
+            liveDisplay.innerText = `Selected Points: x = ${p1.x.toFixed(3)}, with r = ${p1.r.toFixed(3)}`;
         });
+
+
+        function drawCircle(ctx, x, y, radius = 5) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
         
         document.getElementById('fileInput').addEventListener('click', async function (e) {   
             const label = this;
@@ -226,6 +265,7 @@
 
         document.getElementById('F').addEventListener('change', function () {
             const isChecked = this.checked;
+            drawRocket(coords, val);
             document.getElementById('Film_V').style.display = isChecked ? 'block' : 'none';
             document.getElementById('engineSlider').style.display = isChecked ? 'block' : 'none';
             window.api.setSimType('film', isChecked);
@@ -339,11 +379,10 @@
             document.getElementById('Reg_V').style.display = isChecked ? 'block' : 'none';
             window.api.setSimType('regen', isChecked);
         });
-       
+        
         function drawRocket(points, values = [], highlightIndex = null) {
             const canvas = document.getElementById('rocketCanvas');
             const ctx = canvas.getContext('2d');
-
             canvas.width = canvas.clientWidth;
             canvas.height = canvas.clientHeight;
 

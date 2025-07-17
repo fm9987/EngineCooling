@@ -12,10 +12,7 @@ git push -u origin main
 
 TO DO:
 
-- Choose what data to display for the Regen Sim
+- Add the point reader equation to read all the info no that point to engine slider
 - Make error messages display into the error section on the app
-- Make the slider change the color of the corresponding point in the engine 
 - Implement Regen cooling simulation 
-- Make data be written into a json file
-- Use data from json to assign variables to sim
 - Implement film cooling simulation
