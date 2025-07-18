@@ -25,14 +25,6 @@
                     <span class="Button2">Regen cooling</span>
                     <input type="checkbox" role="switch" id="R"> 
                 </div>
-                <!-- Regen cooling variables-->
-                <!-- <div class="Variables" style="display: none;"> -->
-                <div class="Variables" id="Reg_V" style="display: none;">
-                    <input type="text" placeholder="M dot">
-                    <input type="text" placeholder="T0">
-                    <input type="text" placeholder="P0">
-                    <input type="text" placeholder="# Channels">
-                </div>
 
 
                 <!-- Film cooling option -->
@@ -43,16 +35,15 @@
                 <!-- Film cooling variables -->
                 <!-- <div class="Variables" style="display: none;"> -->
                 <div class="Variables" id="Film_V" style="display: none;">
-                    <input type="text" placeholder="M dot">
-                    <input type="text" placeholder="T0">
-                    <input type="text" placeholder="P0">
-                    <input type="text" placeholder="# Channels">
-                    <input type="Location" placeholder="Starting Point">
-                    <!-- <div class="Button">Location</div> -->
+                    <input type="Location" id="Film_Loc" placeholder="Starting Point">
                 </div>
 
                 <!-- Add Initial Conditions of the Sim-->
-                <div class="Button" id="Param" style="display: none"></div>
+                <div id="Live-Data" class="Live" style="display: none;">Data of selection:
+                <div class="live-item">x: <span id="live-x">--</span></div>
+                <div class="live-item">r: <span id="live-r">--</span></div>
+                <div class="live-item"><span id="type">D</span>: <span id="live-D">--</span></div>
+                </div>
 
                 <!-- Run simulation here -->
                 <div class="Button" id="Sim" style="display: none;">
@@ -86,9 +77,9 @@
             </div>
         </div>
 
-        
-        <!-- <input type="range" id="engineSlider" min="0" max="100"> -->
         <input type="range" id="engineSlider" style="display: none;">
+
+        <input type="range" id="DataSlider" style="display: none;">
 	
         <div class="Error" id="Error">
         </div>
@@ -106,15 +97,17 @@
         let coords = [];  // Add this at the top
         let val = [];     // Add this at the top
         const slider = document.getElementById("engineSlider");
+        const slider2 = document.getElementById("DataSlider");
         const liveDisplay = document.getElementById("Error");
+        const filmLoc = document.getElementById('Film_Loc');
+        let Output = '';
 
         slider.addEventListener("input", () => {
             const canvas = document.getElementById('rocketCanvas');
             const ctx = canvas.getContext('2d');
 
             const location1 = Number(slider.value);
-            const offset = 10;
-
+            
             const Film = document.getElementById('F').checked;
 
             if (!Film) {
@@ -147,9 +140,42 @@
             drawCircle(ctx, x1, y1_top);
             drawCircle(ctx, x1, y1_bottom);
 
+            document.getElementById('Film_Loc').placeholder = p1.x.toFixed(3);
+
+
             liveDisplay.innerText = `Selected Points: x = ${p1.x.toFixed(3)}, with r = ${p1.r.toFixed(3)}`;
         });
 
+        slider2.addEventListener("input", () => {
+            const canvas = document.getElementById('rocketCanvas');
+            const ctx = canvas.getContext('2d');
+            const live_x = document.getElementById('live-x');
+            const live_r = document.getElementById('live-r');
+            const live_D = document.getElementById('live-D');
+
+            const location1 = Number(slider2.value);
+
+            // drawRocket(coords, val);
+
+            // Setup scale and margin same as in drawRocket
+            const marginX = 10;
+            const maxX = Math.max(...coords.map(p => p.x));
+            const maxR = Math.max(...coords.map(p => p.r));
+            const scaleX = (canvas.width - 2 * marginX) / maxX;
+
+            // Get physical coordinates
+            const p1 = coords[location1];
+            const p2 = val[location1];
+
+            // Location for circle
+            const x1 = p1.x * scaleX + marginX;
+            document.getElementById('Film_Loc').placeholder = p1.x.toFixed(3);
+            live_x.innerText = p1.x.toFixed(3);
+            live_r.innerText = p1.r.toFixed(3);
+            if (Output !== ''){
+                live_D.innerText = p2.toFixed(3);
+            }
+        });
 
         function drawCircle(ctx, x, y, radius = 5) {
             ctx.beginPath();
@@ -158,7 +184,28 @@
             ctx.lineWidth = 2;
             ctx.stroke();
         }
-        
+
+        filmLoc.addEventListener('input', function () {
+            const inputX = Number(this.value);
+            if (isNaN(inputX)) return;
+
+            // Find index of closest point in coords array
+            let closestIndex = 0;
+            let minDiff = Math.abs(coords[0].x - inputX);
+
+            for (let i = 1; i < coords.length; i++) {
+                const diff = Math.abs(coords[i].x - inputX);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestIndex = i;
+                }
+            }
+
+            // Set slider to that index and trigger input event
+            slider.value = closestIndex;
+            slider.dispatchEvent(new Event('input'));
+        });
+
         document.getElementById('fileInput').addEventListener('click', async function (e) {   
             const label = this;
             
@@ -173,6 +220,8 @@
             document.getElementById('Reg').style.display = 'block';
             document.getElementById('Film').style.display = 'block';
             document.getElementById('Status').style.display = 'block';
+            document.getElementById('Live-Data').style.display = 'block';
+            slider2.style.display = 'block';
 
 
 
@@ -229,10 +278,11 @@
         document.getElementById('Choose').addEventListener('change', function (){
             // Add code to draw the rocket
             const headers = csvHeaders;
-            const selectedOutput = document.getElementById('Choose').value;
-            const columnIndex = headers.indexOf(selectedOutput);
+            Output = document.getElementById('Choose').value;
+            const columnIndex = headers.indexOf(Output);
             const lines = csvLines;
             document.getElementById('ColorBar').style.display = 'block';
+            document.getElementById('type').innerText = Output.charAt(0);
 
             val = lines.slice(1).map(line => {
                 const cols = line.split(',').map(Number);
@@ -255,7 +305,6 @@
 
         document.getElementById('R').addEventListener('change', function () {
             const isChecked = this.checked;
-            document.getElementById('Reg_V').style.display = isChecked ? 'block' : 'none';
             window.api.setSimType('regen', isChecked);
         });
 
@@ -273,75 +322,83 @@
        
         const { ipcRenderer } = require('electron');
 
-        // function drawRocket(points, values = []) {
-        //     const canvas = document.getElementById('rocketCanvas');
-        //     const ctx = canvas.getContext('2d');
+        function drawRocket(points, values = []) {
+            const canvas = document.getElementById('rocketCanvas');
+            const ctx = canvas.getContext('2d');
 
-        //     // Set canvas resolution to match CSS size
-        //     canvas.width = canvas.clientWidth;
-        //     canvas.height = canvas.clientHeight;
+            // Set canvas resolution to match CSS size
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
 
-        //     ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        //     // Add margin to avoid clipping (in pixels)
-        //     const marginX = 10;
-        //     const marginY = 10;
+            // Add margin to avoid clipping (in pixels)
+            const marginX = 10;
+            const marginY = 10;
 
-        //     const maxX = Math.max(...points.map(p => p.x));
-        //     const maxR = Math.max(...points.map(p => p.r));
-        //     const scaleX = (canvas.width - 2 * marginX) / maxX;
-        //     const scaleY = (canvas.height - 2 * marginY) / (2 * maxR);
+            const maxX = Math.max(...points.map(p => p.x));
+            const maxR = Math.max(...points.map(p => p.r));
+            const scaleX = (canvas.width - 2 * marginX) / maxX;
+            const scaleY = (canvas.height - 2 * marginY) / (2 * maxR);
 
-        //     ctx.lineWidth = 5;
+            ctx.lineWidth = 5;
 
-        //     // Use a gradient color based on values (e.g., temperature, stress)
-        //     function getColor(v, min, max) {
-        //         if (max === min) return 'rgb(0,0,255)';
-        //         const t = (v - min) / (max - min);
-        //         const r = Math.round(255 * t);
-        //         const b = Math.round(255 * (1 - t));
-        //         return `rgb(${r},0,${b})`;
-        //     }
+            // Use a gradient color based on values (e.g., temperature, stress)
+            function getColor(v, min, max) {
+                if (max === min) return 'rgb(0,0,255)'; // Default to blue if no range
 
-        //     const minVal = Math.min(...values);
-        //     const maxVal = Math.max(...values);
+                const t = (v - min) / (max - min); // Normalize between 0 and 1
 
-        //     // Draw upper side
-        //     for (let i = 0; i < points.length - 1; i++) {
-        //         const p1 = points[i];
-        //         const p2 = points[i + 1];
-        //         const x1 = p1.x * scaleX + marginX;
-        //         const y1 = canvas.height / 2 - p1.r * scaleY;
-        //         const x2 = p2.x * scaleX + marginX;
-        //         const y2 = canvas.height / 2 - p2.r * scaleY;
+                const r = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 3), 0, 1));
+                const g = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 2), 0, 1));
+                const b = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 1), 0, 1));
 
-        //         const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
-        //         ctx.strokeStyle = color;
+                return `rgb(${r},${g},${b})`;
 
-        //         ctx.beginPath();
-        //         ctx.moveTo(x1, y1);
-        //         ctx.lineTo(x2, y2);
-        //         ctx.stroke();
-        //     }
+                function clamp(x, min, max) {
+                    return Math.max(min, Math.min(max, x));
+                }
+            }
 
-        //     // Draw lower side (mirrored)
-        //     for (let i = points.length - 1; i > 0; i--) {
-        //         const p1 = points[i];
-        //         const p2 = points[i - 1];
-        //         const x1 = p1.x * scaleX + marginX;
-        //         const y1 = canvas.height / 2 + p1.r * scaleY;
-        //         const x2 = p2.x * scaleX + marginX;
-        //         const y2 = canvas.height / 2 + p2.r * scaleY;
+            const minVal = Math.min(...values);
+            const maxVal = Math.max(...values);
 
-        //         const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
-        //         ctx.strokeStyle = color;
+            // Draw upper side
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                const x1 = p1.x * scaleX + marginX;
+                const y1 = canvas.height / 2 - p1.r * scaleY;
+                const x2 = p2.x * scaleX + marginX;
+                const y2 = canvas.height / 2 - p2.r * scaleY;
 
-        //         ctx.beginPath();
-        //         ctx.moveTo(x1, y1);
-        //         ctx.lineTo(x2, y2);
-        //         ctx.stroke();
-        //     }
-        // }
+                const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+                ctx.strokeStyle = color;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+
+            // Draw lower side (mirrored)
+            for (let i = points.length - 1; i > 0; i--) {
+                const p1 = points[i];
+                const p2 = points[i - 1];
+                const x1 = p1.x * scaleX + marginX;
+                const y1 = canvas.height / 2 + p1.r * scaleY;
+                const x2 = p2.x * scaleX + marginX;
+                const y2 = canvas.height / 2 + p2.r * scaleY;
+
+                const color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
+                ctx.strokeStyle = color;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
 
         function drawColorBar(minVal, maxVal) {
             const canvas = document.getElementById('legendCanvas');
@@ -380,104 +437,6 @@
             window.api.setSimType('regen', isChecked);
         });
         
-        function drawRocket(points, values = [], highlightIndex = null) {
-            const canvas = document.getElementById('rocketCanvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const marginX = 10;
-            const marginY = 10;
-
-            const maxX = Math.max(...points.map(p => p.x));
-            const maxR = Math.max(...points.map(p => p.r));
-            const scaleX = (canvas.width - 2 * marginX) / maxX;
-            const scaleY = (canvas.height - 2 * marginY) / (2 * maxR);
-
-            const minVal = Math.min(...values);
-            const maxVal = Math.max(...values);
-
-            const defaultLineWidth = 5;
-            const highlightLineWidth = 10;
-
-            // Top half
-            for (let i = 0; i < points.length - 1; i++) {
-                const p1 = points[i];
-                const p2 = points[i + 1];
-                const x1 = p1.x * scaleX + marginX;
-                const y1 = canvas.height / 2 - p1.r * scaleY;
-                const x2 = p2.x * scaleX + marginX;
-                const y2 = canvas.height / 2 - p2.r * scaleY;
-
-                let color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
-                const isHighlighted = (highlightIndex !== null && (i === highlightIndex || i + 1 === highlightIndex));
-
-                ctx.lineWidth = isHighlighted ? highlightLineWidth : defaultLineWidth;
-                ctx.strokeStyle = isHighlighted ? '#FF0000' : color;
-
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-            }
-
-            // Bottom half
-            for (let i = points.length - 1; i > 0; i--) {
-                const p1 = points[i];
-                const p2 = points[i - 1];
-                const x1 = p1.x * scaleX + marginX;
-                const y1 = canvas.height / 2 + p1.r * scaleY;
-                const x2 = p2.x * scaleX + marginX;
-                const y2 = canvas.height / 2 + p2.r * scaleY;
-
-                let color = values.length ? getColor(values[i], minVal, maxVal) : '#0000FF';
-                const isHighlighted = (highlightIndex !== null && (i === highlightIndex || i - 1 === highlightIndex));
-
-                ctx.lineWidth = isHighlighted ? highlightLineWidth : defaultLineWidth;
-                ctx.strokeStyle = isHighlighted ? 'yellow' : color;
-
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-            }
-
-            // Draw dot at selected point
-            if (highlightIndex !== null && points[highlightIndex]) {
-                const p = points[highlightIndex];
-                const x = p.x * scaleX + marginX;
-                const yTop = canvas.height / 2 - p.r * scaleY;
-                const yBottom = canvas.height / 2 + p.r * scaleY;
-
-                ctx.fillStyle = '#FF00FF';
-                ctx.beginPath();
-                ctx.arc(x, yTop, 6, 0, 2 * Math.PI);
-                ctx.fill();
-
-                ctx.beginPath();
-                ctx.arc(x, yBottom, 6, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-
-            function getColor(v, min, max) {
-                if (max === min) return 'rgb(0,0,255)'; // Default to blue if no range
-
-                const t = (v - min) / (max - min); // Normalize between 0 and 1
-
-                const r = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 3), 0, 1));
-                const g = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 2), 0, 1));
-                const b = Math.round(255 * clamp(1.5 - Math.abs(4 * t - 1), 0, 1));
-
-                return `rgb(${r},${g},${b})`;
-
-                function clamp(x, min, max) {
-                    return Math.max(min, Math.min(max, x));
-                }
-            }
-        };
-
         window.addEventListener('DOMContentLoaded', () => {
             const slider = document.getElementById('engineSlider');
             const errorBox = document.getElementById('Error');
@@ -493,6 +452,7 @@
                 }
             });
         });
+        
         </script>
     </body>
 </html>

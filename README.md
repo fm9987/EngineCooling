@@ -12,7 +12,6 @@ git push -u origin main
 
 TO DO:
 
-- Add the point reader equation to read all the info no that point to engine slider
 - Make error messages display into the error section on the app
 - Implement Regen cooling simulation 
 - Implement film cooling simulation
