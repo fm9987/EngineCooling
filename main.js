@@ -20,7 +20,7 @@ function createMainWindow() {
 
   mainWindow = new BrowserWindow({
     title: 'Main',
-    width: width*0.95,
+    width: width,
     height: height,
     icon: path.join(__dirname, 'RocketCooling.ico'),  // use .icns for macOS
     webPreferences: {
@@ -62,6 +62,34 @@ ipcMain.on('open-data-window', () => {
   });
 
   dataWindow.loadFile(path.join(__dirname, 'simulation.html'));
+
+  dataWindow.on('closed', () => {
+    dataWindow = null;
+  });
+});
+
+ipcMain.on('open-help-window', () => {
+
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+
+  if (dataWindow) {
+    dataWindow.focus();
+    return;
+  }
+
+  dataWindow = new BrowserWindow({
+    width: width*0.9,
+    height: height*0.8,
+    title: "Help",
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      preload: path.join(__dirname, 'preload.js')
+    },
+    autoHideMenuBar: true // ✅ This hides the menu bar!
+  });
+
+  dataWindow.loadFile(path.join(__dirname, 'help.html'));
 
   dataWindow.on('closed', () => {
     dataWindow = null;

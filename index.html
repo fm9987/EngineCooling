@@ -7,8 +7,8 @@
     </head>
 
     <body>
-        <div id="TRY" class="Title"><h1>Rocket Cooling simulation</h1></div>
-        <div class="help Button">?</div>
+        <div class="Title"><h1>Rocket Cooling simulation</h1></div>
+        <div class="help Button" onclick="openHelp()">?</div>
         <div class="Data Button" onclick="openData()">Data</div>
        
         <!-- Menus -->
@@ -429,6 +429,10 @@
 
         function openData() {
             window.api.openDataWindow();
+        }
+        
+        function openHelp() {
+            window.api.openHelpWindow();
         }
         
         document.getElementById('R').addEventListener('change', function () {

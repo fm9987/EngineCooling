@@ -7,5 +7,6 @@ contextBridge.exposeInMainWorld('api', {
     runSimulation: (filePath) => ipcRenderer.invoke('run-simulation', filePath),
     readCSV: (filePath) => ipcRenderer.invoke('read-csv',filePath),
     openDataWindow: () => ipcRenderer.send('open-data-window'),
+    openHelpWindow: () => ipcRenderer.send('open-help-window'),
     setSimType: (type, enabled) => ipcRenderer.invoke('sim-type',type,enabled)
 });

@@ -195,6 +195,16 @@ input{
   z-index: 2;
 }
 
+.HelpBox{
+  text-align: left;
+  line-height: 3.5vh;
+  padding-left: 1vw;
+  width: 80vw;
+  height: 65vh;
+  border: 0.25vh solid skyblue;
+  border-radius: 1vh;
+}
+
 .live-item {
   text-align: center;
   margin-bottom: 5px;
