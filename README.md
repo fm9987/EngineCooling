@@ -20,7 +20,7 @@ TO DO:
 - Make error messages display into the error section on the app (especially python outputs)
 
 
-Publish changes:  
+Publish changes:
 git add .  
 git commit -m "Comment"  
 git push -u origin main  

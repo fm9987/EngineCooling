@@ -1,22 +1,38 @@
 {
-  "name": "Cooling",
+  "name": "rocketcooling",
   "version": "1.6.0",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder"
   },
-  "win": {
-    "icon": "RocketCooling.ico"
-  },
-  "mac":{
-    "icon": "RocketCooling.icns"
+  "build": {
+    "appId": "com.yourdomain.rocketcooling",
+    "productName": "Rocket Cooling",
+    "files": [
+      "**/*",
+      "!Example.csv",
+      "!output.csv",
+      "!README.md"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "RocketCooling.ico",
+      "target": "nsis"
+    },
+    "mac":{
+      "target": []
+    }
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "electron": "^37.1.0"
+  "devDependencies": {
+    "electron": "29.0.1",
+    "electron-builder": "^26.0.12"
   }
 }
